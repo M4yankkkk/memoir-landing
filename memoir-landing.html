@@ -1,0 +1,744 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memoir — Turn your institutional memory into intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0a0a0a;
+  --white:#ffffff;
+  --lime:#B7F250;
+  --lime-dark:#8ec800;
+  --gray-light:#f5f5f3;
+  --gray-mid:#e8e8e4;
+  --gray-text:#6b6b65;
+  --gray-dark:#1a1a18;
+}
+html{font-family:'Inter',sans-serif;background:#fff;color:var(--black);overflow-x:hidden}
+
+/* ── PHASE 1: fixed white stage ── */
+#stage{
+  position:fixed;
+  inset:0;
+  background:#fff;
+  z-index:500;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+#stage.exit{
+  transition:opacity 0.8s ease 0.3s;
+  opacity:0;
+  pointer-events:none;
+}
+
+/* The SVG lives centered on the stage, starts large */
+#anim-svg-wrap{
+  position:absolute;
+  width:110vw;
+  max-width:1100px;
+  transform:scale(1) translate(0,0);
+  transition:transform 1.1s cubic-bezier(.4,0,.2,1), width 1.1s cubic-bezier(.4,0,.2,1);
+}
+#anim-svg-wrap.shrink{
+  /* move to hero position: right side, smaller */
+  transform:translate(28vw, -6vh) scale(0.52);
+  width:110vw;
+}
+#anim-svg{width:100%;height:auto;display:block}
+
+/* lines start invisible */
+.ln{fill:none;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 0.45s ease}
+.ln.done{stroke-dashoffset:0!important}
+
+#dots-g{opacity:0;transition:opacity 0.5s ease 0.1s}
+#dots-g.show{opacity:1}
+
+/* scroll hint */
+#scroll-hint{
+  position:fixed;
+  bottom:36px;left:50%;
+  transform:translateX(-50%);
+  z-index:600;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#aaa;
+  opacity:0;transition:opacity 0.6s ease;
+  animation:bob 2s ease-in-out infinite;
+}
+#scroll-hint.show{opacity:1}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(7px)}}
+.sh-line{width:1px;height:36px;background:linear-gradient(to bottom,transparent,#ccc)}
+
+/* ── NAVBAR ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;height:60px;
+  background:rgba(255,255,255,0.94);backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(0,0,0,0.07);
+  opacity:0;transform:translateY(-14px);
+  transition:opacity 0.55s ease,transform 0.55s ease;
+}
+nav.in{opacity:1;transform:translateY(0)}
+.nav-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;letter-spacing:-.3px;text-decoration:none;color:inherit}
+.logo-grid{display:grid;grid-template-columns:repeat(3,6px);gap:2.5px}
+.logo-grid i{width:6px;height:6px;background:var(--black);border-radius:1px;display:block}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{font-size:13.5px;color:var(--black);text-decoration:none;opacity:.7;transition:opacity .2s}
+.nav-links a:hover{opacity:1}
+.nav-btn{
+  background:#fff;border:1.5px solid var(--black);color:var(--black);
+  font-size:13px;font-weight:500;padding:7px 16px;border-radius:6px;
+  cursor:pointer;display:flex;align-items:center;gap:6px;text-decoration:none;
+  transition:background .2s,color .2s;
+}
+.nav-btn:hover{background:var(--black);color:#fff}
+
+/* ── REAL PAGE (hidden until animation done) ── */
+#page{
+  opacity:0;
+  transition:opacity 0.01s;
+}
+#page.show{opacity:1}
+
+/* ── HERO ── */
+#hero{
+  min-height:100vh;padding:100px 48px 80px;
+  display:flex;align-items:flex-start;position:relative;overflow:hidden;
+}
+.hero-text{
+  max-width:460px;padding-top:30px;
+  opacity:0;transform:translateY(22px);
+  transition:opacity 0.65s ease,transform 0.65s ease;
+}
+.hero-text.in{opacity:1;transform:translateY(0)}
+.hero-title{
+  font-size:clamp(40px,4.8vw,64px);font-weight:900;
+  line-height:1.06;letter-spacing:-2.5px;margin-bottom:18px;
+}
+.hero-title .acc{color:var(--lime-dark)}
+.hero-desc{
+  font-size:14.5px;line-height:1.68;color:#444;
+  max-width:390px;margin-bottom:36px;
+}
+.hero-btns{display:flex;align-items:center;gap:22px}
+.btn-primary{
+  background:var(--black);color:#fff;border:none;
+  padding:12px 22px;border-radius:6px;font-size:14px;font-weight:500;
+  cursor:pointer;display:flex;align-items:center;gap:8px;text-decoration:none;
+  transition:background .2s;
+}
+.btn-primary:hover{background:#333}
+.btn-ghost{
+  display:flex;align-items:center;gap:8px;
+  font-size:14px;color:var(--black);text-decoration:none;opacity:.65;
+  transition:opacity .2s;
+}
+.btn-ghost:hover{opacity:1}
+.play-btn{
+  width:30px;height:30px;border-radius:50%;
+  border:1.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;
+}
+.play-btn::after{
+  content:'';
+  border-left:9px solid currentColor;
+  border-top:5.5px solid transparent;
+  border-bottom:5.5px solid transparent;
+  margin-left:2px;
+}
+/* hero svg placeholder — the real svg is on stage then transitions here */
+.hero-svg-slot{
+  position:absolute;right:0;top:60px;
+  width:55%;max-width:680px;
+  height:calc(100vh - 60px);
+  display:flex;align-items:center;
+  opacity:0;transition:opacity 0.01s;
+}
+.hero-svg-slot.show{opacity:1}
+.hero-svg-slot svg{width:100%;height:auto}
+
+/* ── LOGOS ── */
+#logos{
+  padding:44px 48px;
+  border-top:1px solid var(--gray-mid);
+  opacity:0;transform:translateY(20px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+#logos.in{opacity:1;transform:translateY(0)}
+.logos-label{text-align:center;font-size:13px;color:var(--gray-text);margin-bottom:22px}
+.logos-label em{color:var(--black);font-style:italic}
+.logo-marquee {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+.logo-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: logo-scroll 30s linear infinite;
+  gap: 24px;
+  padding-right: 24px;
+}
+.logo-marquee-track:hover {
+  animation-play-state: paused;
+}
+@keyframes logo-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.logo-marquee-track span {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--black);
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--gray-light);
+  border: 1px solid var(--gray-mid);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.logo-marquee-track span:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* ── WHAT WE DO ── */
+#what{
+  padding:72px 48px 56px;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+#what.in{opacity:1;transform:translateY(0)}
+.tag{
+  display:inline-block;background:var(--lime);color:var(--black);
+  font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;
+  margin-bottom:16px;
+}
+.what-row{display:flex;align-items:flex-start;gap:48px}
+.what-copy{font-size:15px;line-height:1.68;color:#444;max-width:400px}
+
+/* ── GRID ── */
+#grid{
+  padding:0 20px 80px;
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+#grid.in{opacity:1;transform:translateY(0)}
+.card{
+  border-radius:16px;padding:30px;
+  min-height:240px;display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.card.lt{background:var(--gray-light)}
+.card.dk{background:var(--gray-dark);color:#fff}
+.card-h{
+  font-size:22px;font-weight:800;line-height:1.2;letter-spacing:-.5px;
+  display:inline;background:var(--lime);color:var(--black);
+  padding:1px 6px;border-radius:3px;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+}
+.card-lnk{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;text-decoration:none;margin-top:20px;width:fit-content;
+}
+.card.lt .card-lnk{color:var(--black)}
+.card.dk .card-lnk{color:#fff}
+.card-arr{
+  width:28px;height:28px;border-radius:50%;
+  border:1.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;
+}
+.card-bg-circle{
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  width:130px;height:130px;opacity:.15;
+}
+.card-body {
+  font-size: 15px;
+  line-height: 1.5;
+  margin-top: 16px;
+  opacity: 0.8;
+}
+
+/* ── MID CTA ── */
+#mid-cta{
+  margin:0 20px 80px;background:var(--gray-light);border-radius:20px;
+  padding:60px 56px;
+  display:flex;align-items:center;justify-content:space-between;gap:40px;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+#mid-cta.in{opacity:1;transform:translateY(0)}
+.mid-cta-h{
+  font-size:clamp(28px,3vw,42px);font-weight:900;
+  letter-spacing:-1.2px;line-height:1.08;margin-bottom:14px;
+}
+.mid-cta-p{font-size:14px;color:#555;line-height:1.65;max-width:380px;margin-bottom:28px}
+.cta-deco{display:flex;flex-direction:column;align-items:center;gap:18px;flex-shrink:0}
+.deco-big{
+  width:58px;height:58px;background:var(--black);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:20px;letter-spacing:2px;
+}
+.deco-sm{
+  width:14px;height:14px;background:var(--lime);
+  border:2px solid var(--black);border-radius:50%;
+}
+
+/* ── PRICING ── */
+#pricing {
+  padding:0 20px 80px;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+#pricing.in {
+  opacity:1;transform:translateY(0);
+}
+
+/* ── CASE STUDIES ── */
+#cases{
+  padding:0 20px 80px;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+#cases.in{opacity:1;transform:translateY(0)}
+.cases-top{display:flex;align-items:flex-start;gap:36px;padding:0 20px;margin-bottom:20px}
+.cases-sub{font-size:14px;color:#555;max-width:300px;line-height:1.55}
+.cases-grid{
+  background:var(--gray-dark);border-radius:16px;padding:40px;
+  display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:36px;
+}
+.case-body{color:#ccc;font-size:13.5px;line-height:1.7;margin-bottom:20px}
+.case-sep{background:rgba(255,255,255,.1)}
+.case-link{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:500;color:#fff;text-decoration:none;
+}
+.case-link:hover{color:var(--lime)}
+
+footer{
+  text-align:center;padding:36px;
+  font-size:12px;color:#aaa;
+  border-top:1px solid var(--gray-mid);
+}
+
+/* scroll lock */
+body.locked{overflow:hidden;height:100vh}
+</style>
+</head>
+<body class="locked">
+
+<!-- ══ FIXED ANIMATION STAGE ══ -->
+<div id="stage">
+  <div id="anim-svg-wrap">
+    <svg id="anim-svg" viewBox="0 0 625 394" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- GROUP A: left organic bundle (draws left→center) -->
+      <path class="ln" id="la0" style="--len:520px" d="M56.5 85.5C84.5 78 176.298 47.3413 231.498 93.3413C286.698 139.341 299.07 135.841 352.57 135.841" stroke="black" stroke-width="2.5"/>
+      <path class="ln" id="la1" style="--len:460px" d="M52.5 120.378C82 120.378 160.727 57.2948 217.498 101.341C275.498 146.341 288.998 135.841 342.498 135.841" stroke="black" stroke-width="2.5"/>
+      <path class="ln" id="la2" style="--len:500px" d="M34 167.5C65 159.5 104.3 182.3 125.5 167.5C152 149 166 71.5 206.5 71.5C251.249 71.5 245 138 337 135.5" stroke="black" stroke-width="2.5"/>
+      <path class="ln" id="la3" style="--len:600px" d="M349.086 135.842C295.586 135.842 234.922 159.496 164.998 140.341C119.498 127.877 68.5 143.5 40.5 151" stroke="black" stroke-width="2" opacity=".7"/>
+      <path class="ln" id="la4" style="--len:640px" d="M352.57 135.841C299.07 135.841 228.698 139.341 173.498 93.3413C118.298 47.3413 51.5 44.5 23.5 52" stroke="black" stroke-width="2" opacity=".65"/>
+      <path class="ln" id="la5" style="--len:680px" d="M352.57 135.841C299.07 135.841 228.711 112.379 173.511 66.379C118.311 20.379 56.5 11 29.5 14.5001" stroke="black" stroke-width="2" opacity=".55"/>
+
+      <!-- GROUP B: converging fan from bottom-left -->
+      <path class="ln" id="lb0" style="--len:560px" d="M47.2748 272.815C73.3693 280.306 123.024 266.823 174.467 220.878C225.911 174.934 285.829 135.954 335.688 135.954" stroke="black" stroke-width="2.5"/>
+      <path class="ln" id="lb1" style="--len:510px" d="M56.5943 212.361C90.1443 207.37 121.56 246.866 174.467 202.873C228.52 157.928 276.442 135.954 326.301 135.954" stroke="black" stroke-width="2.5"/>
+      <path class="ln" id="lb2" style="--len:520px" d="M30.4971 232.335C56.5915 239.826 147.459 207.395 184.713 163.921C222.379 119.967 276.442 135.954 326.301 135.954" stroke="black" stroke-width="2" opacity=".7"/>
+      <path class="ln" id="lb3" style="--len:540px" d="M332.441 135.953C282.582 135.953 214.556 111.485 167.959 163.921C121.777 215.89 63.5839 199.375 37.4894 191.884" stroke="black" stroke-width="2" opacity=".7"/>
+      <path class="ln" id="lb4" style="--len:590px" d="M30.4971 302.779C56.5915 310.27 130.029 226.843 181.472 180.899C232.916 134.955 285.829 135.954 335.688 135.954" stroke="black" stroke-width="2" opacity=".6"/>
+
+      <!-- GROUP C: horizontal spine + right oscillating lines -->
+      <path class="ln" id="lc0" style="--len:270px" d="M335.688 135.954H598.497" stroke="black" stroke-width="3"/>
+      <path class="ln" id="lc1" style="--len:380px" d="M299.497 137.422C315.798 133 324.647 123.664 333.496 123.664C350.834 123.664 345.605 163.955 372.151 139.387C396.369 116.975 406.044 116.785 423.382 137.422C442.728 160.45 443.472 141.889 461.572 126.612C474.147 115.999 483.351 134.613 492.776 142.827C503.488 152.163 511.05 142.758 524.911 128.578C540.281 112.855 552.228 140.245 564.964 145.284C573.813 148.784 578.936 139.94 598.497 140.431" stroke="black" stroke-width="2"/>
+      <path class="ln" id="lc2" style="--len:390px" d="M309.497 135.518C325.838 139.94 334.242 146.838 343.113 146.838C360.494 146.838 355.252 106.547 381.864 131.115C406.142 153.527 415.84 153.717 433.221 133.08C452.615 110.053 453.36 128.614 471.505 143.89C484.111 154.503 493.338 135.889 502.786 127.675C513.525 118.34 521.106 127.744 535.001 141.924C550.408 157.648 563.481 135.046 574.219 126.201C578.992 122.27 585.424 123.234 598.497 123.234" stroke="black" stroke-width="2"/>
+      <path class="ln" id="lc3" style="--len:390px" d="M308.497 134.717C324.815 139.206 341.134 143.695 356.053 143.695C368.586 143.695 374.237 113.268 393.352 129.249C418.764 150.495 427.282 152.195 444.639 131.245C464.006 107.867 464.75 126.71 482.87 142.219C495.458 152.993 504.673 134.097 514.108 125.758C524.831 116.28 532.402 125.827 546.278 140.223C561.664 156.185 566.327 141.201 577.05 132.223C581.816 128.232 584.51 129.23 598.497 129.23" stroke="black" stroke-width="2"/>
+      <path class="ln" id="lc4" style="--len:390px" d="M323.497 137.569C339.811 133.207 348.667 123.998 357.522 123.998C374.874 123.998 369.641 163.742 396.209 139.508C420.446 117.4 430.128 117.213 447.48 137.569C466.842 160.284 467.586 141.975 485.7 126.906C498.285 116.438 507.497 134.798 516.929 142.901C527.65 152.11 535.218 142.833 549.09 128.845C564.472 113.336 566.802 128.905 577.523 137.629C582.287 141.507 582.184 146.838 598.497 146.838" stroke="#B7F250" stroke-width="2.5"/>
+
+      <!-- DOTS (appear at the end) -->
+      <g id="dots-g">
+        <circle cx="607.5" cy="135.029" r="16" fill="#B7F250" stroke="black" stroke-width="2"/>
+        <circle cx="47" cy="272.529" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="59.5" cy="213.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="38.5" cy="192.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="42.5" cy="150.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="52.5" cy="120.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="23.5" cy="120.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="23.5" cy="52.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="30" cy="169" r="16" fill="#B7F250" stroke="black" stroke-width="2"/>
+        <circle cx="42" cy="83" r="16" fill="#B7F250" stroke="black" stroke-width="2"/>
+        <circle cx="36" cy="236" r="16" fill="#B7F250" stroke="black" stroke-width="2"/>
+        <circle cx="17" cy="17" r="16" fill="#B7F250" stroke="black" stroke-width="2"/>
+        <path d="M13.9376 11.2601C14.4516 11.4374 14.9405 11.6833 15.3915 11.9916C16.0289 11.8248 16.6843 11.7412 17.3422 11.7426C18.0216 11.7426 18.6771 11.8293 19.2915 11.9909C19.7423 11.6829 20.2309 11.4372 20.7447 11.2601C21.2216 11.0943 21.901 10.8258 22.3047 11.2825C22.5784 11.5929 22.6468 12.1132 22.6954 12.5104C22.7501 12.9538 22.7631 13.5314 22.6194 14.1049C23.1688 14.83 23.5 15.6951 23.5 16.6377C23.5 18.0657 22.7433 19.3056 21.6232 20.1643C21.0839 20.572 20.4862 20.8919 19.8511 21.1126C19.9976 21.4553 20.079 21.8343 20.079 22.2322V24.3301C20.079 24.5156 20.0069 24.6935 19.8786 24.8246C19.7503 24.9557 19.5762 25.0294 19.3948 25.0294H15.2896C15.1081 25.0294 14.9341 24.9557 14.8058 24.8246C14.6775 24.6935 14.6054 24.5156 14.6054 24.3301V23.6371C13.952 23.7189 13.4039 23.6462 12.938 23.4441C12.4508 23.2329 12.1115 22.9056 11.8562 22.5923C11.614 22.2958 11.3499 21.6273 10.9682 21.4972C10.8829 21.4682 10.804 21.4223 10.7361 21.3621C10.6682 21.302 10.6126 21.2287 10.5723 21.1466C10.4911 20.9807 10.4777 20.7886 10.5351 20.6126C10.5924 20.4366 10.7158 20.2911 10.8781 20.2081C11.0404 20.125 11.2284 20.1113 11.4006 20.1699C11.8562 20.3252 12.1532 20.6609 12.3564 20.9308C12.6848 21.3644 12.9517 21.9308 13.4716 22.1567C13.6858 22.2497 13.9999 22.3105 14.4911 22.242L14.6054 22.2182C14.6069 21.8377 14.6845 21.4615 14.8332 21.1126C14.1982 20.8919 13.6004 20.572 13.0611 20.1643C11.9411 19.3056 11.1844 18.0664 11.1844 16.6377C11.1844 15.6965 11.5148 14.8321 12.0629 14.1077C11.9192 13.5342 11.9315 12.9552 11.9862 12.5111L11.9897 12.4846C12.0396 12.0776 12.0978 11.5985 12.3769 11.2825C12.7806 10.8258 13.4607 11.095 13.9369 11.2608L13.9376 11.2601Z" fill="black"/>
+        <path d="M22.5 283.029C31.3366 283.029 38.5 290.193 38.5 299.029C38.5 307.866 31.3366 315.029 22.5 315.029C13.6634 315.029 6.5 307.866 6.5 299.029C6.5 290.193 13.6634 283.029 22.5 283.029Z" fill="#B7F250" stroke="black" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<!-- scroll hint -->
+<div id="scroll-hint">
+  <div class="sh-line"></div>
+  scroll to reveal
+</div>
+
+<!-- ══ NAVBAR ══ -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <img src="/logo.svg" alt="Memoir Logo" style="height: 16px;" />
+  </a>
+  <ul class="nav-links">
+    <li><a href="#">Product</a></li>
+    <li><a href="#">How it works</a></li>
+    <li><a href="#">Use cases</a></li>
+    <li><a href="#">Security</a></li>
+    <li><a href="#">Docs</a></li>
+    <li><a href="#">Pricing</a></li>
+  </ul>
+  <a href="#" class="nav-btn">Request a Demo ↗</a>
+</nav>
+
+<!-- ══ REST OF PAGE ══ -->
+<div id="page">
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-text" id="hero-text">
+      <h1 class="hero-title">
+        Turn your<br>
+        institutional<br>
+        memory into<br>
+        <span class="acc">intelligence.</span>
+      </h1>
+      <p class="hero-desc">Memoir is an autonomous knowledge graph that continuously ingests your engineering org's communication and code history, resolves entities across every tool, and exposes a permissioned context API that turns years of fragmented institutional memory into structured, queryable intelligence.</p>
+      <div class="hero-btns">
+        <a href="#" class="btn-primary">Request a demo ↗</a>
+        <a href="#" class="btn-ghost"><span class="play-btn"></span> Watch overview</a>
+      </div>
+    </div>
+
+    <!-- Hero SVG slot — static copy shown after animation -->
+    <div class="hero-svg-slot" id="hero-svg-slot">
+      <svg viewBox="0 0 625 394" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M56.5 85.5C84.5 78 176.298 47.3413 231.498 93.3413C286.698 139.341 299.07 135.841 352.57 135.841" stroke="black" stroke-width="2.5" fill="none"/>
+        <path d="M52.5 120.378C82 120.378 160.727 57.2948 217.498 101.341C275.498 146.341 288.998 135.841 342.498 135.841" stroke="black" stroke-width="2.5" fill="none"/>
+        <path d="M34 167.5C65 159.5 104.3 182.3 125.5 167.5C152 149 166 71.5 206.5 71.5C251.249 71.5 245 138 337 135.5" stroke="black" stroke-width="2.5" fill="none"/>
+        <path d="M349.086 135.842C295.586 135.842 234.922 159.496 164.998 140.341C119.498 127.877 68.5 143.5 40.5 151" stroke="black" stroke-width="2" opacity=".7" fill="none"/>
+        <path d="M352.57 135.841C299.07 135.841 228.698 139.341 173.498 93.3413C118.298 47.3413 51.5 44.5 23.5 52" stroke="black" stroke-width="2" opacity=".65" fill="none"/>
+        <path d="M352.57 135.841C299.07 135.841 228.711 112.379 173.511 66.379C118.311 20.379 56.5 11 29.5 14.5001" stroke="black" stroke-width="2" opacity=".55" fill="none"/>
+        <path d="M47.2748 272.815C73.3693 280.306 123.024 266.823 174.467 220.878C225.911 174.934 285.829 135.954 335.688 135.954" stroke="black" stroke-width="2.5" fill="none"/>
+        <path d="M56.5943 212.361C90.1443 207.37 121.56 246.866 174.467 202.873C228.52 157.928 276.442 135.954 326.301 135.954" stroke="black" stroke-width="2.5" fill="none"/>
+        <path d="M30.4971 232.335C56.5915 239.826 147.459 207.395 184.713 163.921C222.379 119.967 276.442 135.954 326.301 135.954" stroke="black" stroke-width="2" opacity=".7" fill="none"/>
+        <path d="M332.441 135.953C282.582 135.953 214.556 111.485 167.959 163.921C121.777 215.89 63.5839 199.375 37.4894 191.884" stroke="black" stroke-width="2" opacity=".7" fill="none"/>
+        <path d="M30.4971 302.779C56.5915 310.27 130.029 226.843 181.472 180.899C232.916 134.955 285.829 135.954 335.688 135.954" stroke="black" stroke-width="2" opacity=".6" fill="none"/>
+        <path d="M335.688 135.954H598.497" stroke="black" stroke-width="3" fill="none"/>
+        <path d="M299.497 137.422C315.798 133 324.647 123.664 333.496 123.664C350.834 123.664 345.605 163.955 372.151 139.387C396.369 116.975 406.044 116.785 423.382 137.422C442.728 160.45 443.472 141.889 461.572 126.612C474.147 115.999 483.351 134.613 492.776 142.827C503.488 152.163 511.05 142.758 524.911 128.578C540.281 112.855 552.228 140.245 564.964 145.284C573.813 148.784 578.936 139.94 598.497 140.431" stroke="black" stroke-width="2" fill="none"/>
+        <path d="M309.497 135.518C325.838 139.94 334.242 146.838 343.113 146.838C360.494 146.838 355.252 106.547 381.864 131.115C406.142 153.527 415.84 153.717 433.221 133.08C452.615 110.053 453.36 128.614 471.505 143.89C484.111 154.503 493.338 135.889 502.786 127.675C513.525 118.34 521.106 127.744 535.001 141.924C550.408 157.648 563.481 135.046 574.219 126.201C578.992 122.27 585.424 123.234 598.497 123.234" stroke="black" stroke-width="2" fill="none"/>
+        <path d="M308.497 134.717C324.815 139.206 341.134 143.695 356.053 143.695C368.586 143.695 374.237 113.268 393.352 129.249C418.764 150.495 427.282 152.195 444.639 131.245C464.006 107.867 464.75 126.71 482.87 142.219C495.458 152.993 504.673 134.097 514.108 125.758C524.831 116.28 532.402 125.827 546.278 140.223C561.664 156.185 566.327 141.201 577.05 132.223C581.816 128.232 584.51 129.23 598.497 129.23" stroke="black" stroke-width="2" fill="none"/>
+        <path d="M323.497 137.569C339.811 133.207 348.667 123.998 357.522 123.998C374.874 123.998 369.641 163.742 396.209 139.508C420.446 117.4 430.128 117.213 447.48 137.569C466.842 160.284 467.586 141.975 485.7 126.906C498.285 116.438 507.497 134.798 516.929 142.901C527.65 152.11 535.218 142.833 549.09 128.845C564.472 113.336 566.802 128.905 577.523 137.629C582.287 141.507 582.184 146.838 598.497 146.838" stroke="#B7F250" stroke-width="2.5" fill="none"/>
+        <circle cx="607.5" cy="135.029" r="16" fill="#B7F250" stroke="black" stroke-width="2"/>
+        <circle cx="47" cy="272.529" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="59.5" cy="213.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="38.5" cy="192.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="42.5" cy="150.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="52.5" cy="120.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="23.5" cy="120.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="23.5" cy="52.5" r="3" fill="#B7F250" stroke="black"/>
+        <circle cx="30" cy="169" r="16" fill="#B7F250" stroke="black" stroke-width="2"/>
+        <circle cx="42" cy="83" r="16" fill="#B7F250" stroke="black" stroke-width="2"/>
+        <circle cx="36" cy="236" r="16" fill="#B7F250" stroke="black" stroke-width="2"/>
+        <circle cx="17" cy="17" r="16" fill="#B7F250" stroke="black" stroke-width="2"/>
+        <path d="M13.9376 11.2601C14.4516 11.4374 14.9405 11.6833 15.3915 11.9916C16.0289 11.8248 16.6843 11.7412 17.3422 11.7426C18.0216 11.7426 18.6771 11.8293 19.2915 11.9909C19.7423 11.6829 20.2309 11.4372 20.7447 11.2601C21.2216 11.0943 21.901 10.8258 22.3047 11.2825C22.5784 11.5929 22.6468 12.1132 22.6954 12.5104C22.7501 12.9538 22.7631 13.5314 22.6194 14.1049C23.1688 14.83 23.5 15.6951 23.5 16.6377C23.5 18.0657 22.7433 19.3056 21.6232 20.1643C21.0839 20.572 20.4862 20.8919 19.8511 21.1126C19.9976 21.4553 20.079 21.8343 20.079 22.2322V24.3301C20.079 24.5156 20.0069 24.6935 19.8786 24.8246C19.7503 24.9557 19.5762 25.0294 19.3948 25.0294H15.2896C15.1081 25.0294 14.9341 24.9557 14.8058 24.8246C14.6775 24.6935 14.6054 24.5156 14.6054 24.3301V23.6371C13.952 23.7189 13.4039 23.6462 12.938 23.4441C12.4508 23.2329 12.1115 22.9056 11.8562 22.5923C11.614 22.2958 11.3499 21.6273 10.9682 21.4972C10.8829 21.4682 10.804 21.4223 10.7361 21.3621C10.6682 21.302 10.6126 21.2287 10.5723 21.1466C10.4911 20.9807 10.4777 20.7886 10.5351 20.6126C10.5924 20.4366 10.7158 20.2911 10.8781 20.2081C11.0404 20.125 11.2284 20.1113 11.4006 20.1699C11.8562 20.3252 12.1532 20.6609 12.3564 20.9308C12.6848 21.3644 12.9517 21.9308 13.4716 22.1567C13.6858 22.2497 13.9999 22.3105 14.4911 22.242L14.6054 22.2182C14.6069 21.8377 14.6845 21.4615 14.8332 21.1126C14.1982 20.8919 13.6004 20.572 13.0611 20.1643C11.9411 19.3056 11.1844 18.0664 11.1844 16.6377C11.1844 15.6965 11.5148 14.8321 12.0629 14.1077C11.9192 13.5342 11.9315 12.9552 11.9862 12.5111L11.9897 12.4846C12.0396 12.0776 12.0978 11.5985 12.3769 11.2825C12.7806 10.8258 13.4607 11.095 13.9369 11.2608L13.9376 11.2601Z" fill="black"/>
+        <path d="M22.5 283.029C31.3366 283.029 38.5 290.193 38.5 299.029C38.5 307.866 31.3366 315.029 22.5 315.029C13.6634 315.029 6.5 307.866 6.5 299.029C6.5 290.193 13.6634 283.029 22.5 283.029Z" fill="#B7F250" stroke="black" stroke-width="2"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- LOGOS -->
+  <section id="logos">
+    <p class="logos-label">Ingests from every tool. <em>Resolves across everything.</em></p>
+    <div class="logo-marquee">
+      <div class="logo-marquee-track">
+        <!-- First set of logos -->
+        <span>Slack</span><span>GitHub</span><span>Linear</span>
+        <span>Notion</span><span>Confluence</span><span>Jira</span><span>Google Drive</span>
+        <span>Figma</span><span>Asana</span><span>Discord</span>
+        <!-- Duplicated set for seamless infinite loop -->
+        <span>Slack</span><span>GitHub</span><span>Linear</span>
+        <span>Notion</span><span>Confluence</span><span>Jira</span><span>Google Drive</span>
+        <span>Figma</span><span>Asana</span><span>Discord</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT WE DO -->
+  <section id="what">
+    <div class="what-row">
+      <div><div class="tag">What we do</div></div>
+      <p class="what-copy">Memoir connects fragmented knowledge across tools and people—so your team always has the right context at their fingertips.</p>
+    </div>
+  </section>
+
+  <!-- FEATURE GRID -->
+  <section id="grid">
+    <div class="card lt">
+      <div>
+        <p class="card-h">Autonomous<br>knowledge graph</p>
+        <p class="card-body">Memoir connects Slack, Notion, GitHub, and Discord, dynamically mapping concepts and generating relationships automatically.</p>
+      </div>
+      <svg class="card-bg-circle" viewBox="0 0 120 120" fill="none"><circle cx="60" cy="60" r="55" stroke="#000" stroke-width="1"/><circle cx="60" cy="60" r="36" stroke="#000" stroke-width="1"/><circle cx="60" cy="60" r="18" stroke="#000" stroke-width="1"/></svg>
+      <a href="#" class="card-lnk"><span class="card-arr">↗</span> Learn more</a>
+    </div>
+    <div class="card dk">
+      <div>
+        <p class="card-h">Identity Resolution<br>across tools</p>
+        <p class="card-body">We automatically map disparate identities—unifying 'm.tiwari' on Notion with 'Mayank' on Discord into a single entity.</p>
+      </div>
+      <svg class="card-bg-circle" viewBox="0 0 120 120" fill="none"><circle cx="60" cy="60" r="55" stroke="#fff" stroke-width="1"/><circle cx="60" cy="60" r="36" stroke="#fff" stroke-width="1"/><circle cx="60" cy="60" r="18" stroke="#fff" stroke-width="1"/></svg>
+      <a href="#" class="card-lnk"><span class="card-arr">↗</span> Learn more</a>
+    </div>
+    <div class="card dk">
+      <div>
+        <p class="card-h">Context API for<br>your workflows</p>
+        <p class="card-body">Bring intelligence to your internal tools. We expose a strict, permissioned Context API over your engineering organization.</p>
+      </div>
+      <a href="#" class="card-lnk"><span class="card-arr">↗</span> Learn more</a>
+    </div>
+    <div class="card lt">
+      <div>
+        <p class="card-h">Query anything.<br>Get answers.</p>
+        <p class="card-body">Ask plain-English questions. Memoir runs RAG across our tri-store (Vector + Graph + Postgres) to synthesize exact citations.</p>
+      </div>
+      <a href="#" class="card-lnk"><span class="card-arr">↗</span> Learn more</a>
+    </div>
+  </section>
+
+  <!-- MID CTA -->
+  <div id="mid-cta">
+    <div>
+      <h2 class="mid-cta-h">Make years of knowledge instantly useful.</h2>
+      <p class="mid-cta-p">Memoir transforms scattered conversations, docs, and code into structured, queryable intelligence—so your team moves faster.</p>
+      <a href="#" class="btn-primary">Request a demo ↗</a>
+    </div>
+    <div class="cta-deco">
+      <div class="deco-sm"></div>
+      <div class="deco-big">···</div>
+      <div class="deco-sm" style="transform:rotate(45deg) scale(1.6)"></div>
+    </div>
+  </div>
+
+  <section id="pricing">
+    <div class="cases-top" style="justify-content:center;text-align:center;margin-bottom:40px;">
+      <div style="display:flex;justify-content:center;"><div class="tag">Pricing</div></div>
+      <h2 class="mid-cta-h" style="font-size:clamp(28px, 3vw, 42px);margin-top:16px;">Simple, transparent pricing.</h2>
+    </div>
+    <div class="cases-grid" style="grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));background:transparent;padding:0;gap:12px;">
+      <div class="card lt" style="min-height:320px;">
+        <div>
+          <p class="card-h" style="font-size:20px;background:transparent;padding:0;">Startup</p>
+          <p style="font-size:36px;font-weight:900;margin-top:12px;">$299<span style="font-size:16px;color:#666;font-weight:500;">/mo</span></p>
+          <p style="font-size:14px;color:#555;margin-top:16px;line-height:1.6;">Up to 3 integrations and 500k ingested documents/messages.</p>
+        </div>
+        <a href="#" class="btn-ghost" style="margin-top:24px;">Get Started ↗</a>
+      </div>
+      <div class="card dk" style="min-height:320px;">
+        <div>
+          <p class="card-h" style="font-size:20px;background:var(--lime);color:var(--black);padding:2px 8px;">Growth</p>
+          <p style="font-size:36px;font-weight:900;margin-top:12px;color:#fff;">$899<span style="font-size:16px;color:#aaa;font-weight:500;">/mo</span></p>
+          <p style="font-size:14px;color:#ccc;margin-top:16px;line-height:1.6;">Unlimited integrations, 5M documents/messages, and advanced graph analytics.</p>
+        </div>
+        <a href="#" class="btn-primary" style="margin-top:24px;background:var(--lime);color:var(--black);">Start Free Trial ↗</a>
+      </div>
+      <div class="card lt" style="min-height:320px;">
+        <div>
+          <p class="card-h" style="font-size:20px;background:transparent;padding:0;">Enterprise</p>
+          <p style="font-size:36px;font-weight:900;margin-top:12px;">Custom</p>
+          <p style="font-size:14px;color:#555;margin-top:16px;line-height:1.6;">VPC deployment, SLA, custom integrations, and unlimited data.</p>
+        </div>
+        <a href="#" class="btn-ghost" style="margin-top:24px;">Contact Sales ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CASE STUDIES -->
+  <section id="cases">
+    <div class="cases-top">
+      <div><div class="tag">Case studies</div></div>
+      <p class="cases-sub">See how engineering teams turn institutional memory into real impact.</p>
+    </div>
+    <div class="cases-grid">
+      <div>
+        <p class="case-body">A Series B fintech used Memoir to index 2M+ Slack messages and GitHub PRs, cutting engineer onboarding time by 40%.</p>
+        <a href="#" class="case-link">Read more ↗</a>
+      </div>
+      <div class="case-sep"></div>
+      <div>
+        <p class="case-body">A remote-first dev agency deployed our Graph RAG to unify client contexts across Notion and Jira, resolving support tickets 2x faster.</p>
+        <a href="#" class="case-link">Read more ↗</a>
+      </div>
+      <div class="case-sep"></div>
+      <div>
+        <p class="case-body">An enterprise engineering team eliminated 15 hours/week of "who knows what" Slack pings by querying our autonomous context API.</p>
+        <a href="#" class="case-link">Read more ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <footer><p>© 2024 Memoir Inc. All rights reserved.</p></footer>
+</div><!-- /page -->
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────
+const SCROLL_PER_LINE = 90;   // px of scroll to reveal each line
+const lines = Array.from(document.querySelectorAll('.ln'));
+const TOTAL = lines.length;
+const TOTAL_SCROLL = SCROLL_PER_LINE * TOTAL; // total scroll to complete drawing
+
+// ─── MEASURE ACTUAL PATH LENGTHS ──────────────────────
+lines.forEach(p => {
+  const len = p.getTotalLength();
+  p.style.setProperty('--len', len + 'px');
+  p.style.strokeDasharray = len;
+  p.style.strokeDashoffset = len;
+});
+
+// ─── VIRTUAL SCROLL COUNTER ───────────────────────────
+// We intercept wheel/touch and accumulate virtual scroll
+// while body is locked (page stays fixed at top)
+let vScroll = 0;
+let animPhase = 'drawing'; // drawing → shrinking → done
+let ticking = false;
+
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+// Show scroll hint after 1s
+setTimeout(() => {
+  document.getElementById('scroll-hint').classList.add('show');
+}, 900);
+
+// ─── RENDER ───────────────────────────────────────────
+function render() {
+  ticking = false;
+  if (animPhase !== 'drawing') return;
+
+  const progress = clamp(vScroll / TOTAL_SCROLL, 0, 1);
+  const linesDue = progress * TOTAL;
+
+  lines.forEach((p, i) => {
+    const len = p.getTotalLength();
+    if (i < Math.floor(linesDue)) {
+      p.style.strokeDashoffset = 0;
+    } else if (i === Math.floor(linesDue)) {
+      const frac = linesDue - i;
+      p.style.strokeDashoffset = len * (1 - frac);
+    }
+  });
+
+  if (progress >= 1) {
+    completeAnimation();
+  }
+}
+
+function scheduleRender() {
+  if (!ticking) {
+    ticking = true;
+    requestAnimationFrame(render);
+  }
+}
+
+// ─── INPUT CAPTURE ────────────────────────────────────
+window.addEventListener('wheel', e => {
+  if (animPhase !== 'drawing') return;
+  e.preventDefault();
+  vScroll = clamp(vScroll + e.deltaY, 0, TOTAL_SCROLL + 10);
+  scheduleRender();
+}, { passive: false });
+
+let touchStartY = 0;
+window.addEventListener('touchstart', e => {
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+window.addEventListener('touchmove', e => {
+  if (animPhase !== 'drawing') return;
+  e.preventDefault();
+  const dy = touchStartY - e.touches[0].clientY;
+  touchStartY = e.touches[0].clientY;
+  vScroll = clamp(vScroll + dy * 2, 0, TOTAL_SCROLL + 10);
+  scheduleRender();
+}, { passive: false });
+
+// ─── PHASE: ALL LINES DRAWN → SHRINK & REVEAL UI ─────
+function completeAnimation() {
+  if (animPhase !== 'drawing') return;
+  animPhase = 'shrinking';
+
+  // hide scroll hint
+  document.getElementById('scroll-hint').classList.remove('show');
+
+  // Show dots
+  document.getElementById('dots-g').classList.add('show');
+
+  // Wait a beat, then shrink SVG to hero position
+  setTimeout(() => {
+    document.getElementById('anim-svg-wrap').classList.add('shrink');
+
+    // While shrinking, show the page (but hero SVG slot hidden yet)
+    document.getElementById('page').classList.add('show');
+
+    // After shrink transition (1.1s), fade out stage and reveal hero
+    setTimeout(() => {
+      // Unlock scroll
+      document.body.classList.remove('locked');
+      animPhase = 'done';
+
+      // Fade stage out
+      const stage = document.getElementById('stage');
+      stage.classList.add('exit');
+
+      // Show hero SVG slot
+      document.getElementById('hero-svg-slot').classList.add('show');
+
+      // Slide in navbar
+      setTimeout(() => {
+        document.getElementById('navbar').classList.add('in');
+      }, 80);
+
+      // Fade in hero text
+      setTimeout(() => {
+        document.getElementById('hero-text').classList.add('in');
+      }, 250);
+
+      // Remove stage from DOM after it's gone
+      setTimeout(() => {
+        stage.style.display = 'none';
+      }, 1200);
+
+    }, 1150);
+  }, 400);
+}
+
+// ─── BELOW-FOLD REVEALS ───────────────────────────────
+const revealEls = ['logos','what','grid','mid-cta','pricing','cases'];
+function checkReveal() {
+  revealEls.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.9) {
+      el.classList.add('in');
+    }
+  });
+}
+window.addEventListener('scroll', checkReveal, { passive: true });
+</script>
+</body>
+</html>
