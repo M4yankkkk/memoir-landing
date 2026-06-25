@@ -8,7 +8,6 @@ import AnimatedTerminal from '../components/AnimatedTerminal';
 import SpotlightCard from '../components/SpotlightCard';
 import SplitText from '../components/SplitText';
 import ShinyText from '../components/ShinyText';
-import Aurora from '../components/Aurora/Aurora';
 
 gsap.registerPlugin(ScrollTrigger);
 
