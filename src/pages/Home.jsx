@@ -87,7 +87,7 @@ export default function Home() {
           </h1>
           <p className="text-base leading-relaxed text-[#444] max-w-[390px] mb-8">Memoir is an autonomous knowledge graph that continuously ingests your engineering org's communication and code history, resolves entities across every tool, and exposes a permissioned context API that turns years of fragmented institutional memory into structured, queryable intelligence.</p>
           <div className="flex items-center gap-[22px]">
-            <a href="#" className="bg-black text-white px-[22px] py-[12px] rounded-md text-[14px] font-medium flex items-center gap-[8px] transition-all duration-200 hover:bg-[#333] hover:-translate-y-[1px] no-underline">Request a demo ↗</a>
+            <a href="https://app.memoir.systems/login" className="bg-black text-white px-[22px] py-[12px] rounded-md text-[14px] font-medium flex items-center gap-[8px] transition-all duration-200 hover:bg-[#333] hover:-translate-y-[1px] no-underline">Get started ↗</a>
             <a href="#" className="flex items-center gap-[8px] text-[14px] text-black opacity-65 hover:opacity-100 transition-opacity duration-200 no-underline">
               <span className="w-[30px] h-[30px] rounded-full border-[1.5px] border-current flex items-center justify-center relative after:content-[''] after:border-l-[9px] after:border-l-current after:border-y-[5.5px] after:border-y-transparent after:ml-[2px]"></span>
               Watch overview
@@ -208,7 +208,7 @@ export default function Home() {
         <div>
           <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-tight mb-4"><SplitText text="Make years of knowledge instantly useful." delay={30} /></h2>
           <p className="text-base text-[#555] leading-relaxed max-w-[380px] mx-auto md:mx-0 mb-8">Memoir transforms scattered conversations, docs, and code into structured, queryable intelligence—so your team moves faster.</p>
-          <a href="#" className="bg-black text-white px-6 py-3 rounded-md text-sm font-medium inline-flex items-center gap-2 transition-all duration-200 hover:bg-[#333] hover:-translate-y-0.5 no-underline">Request a demo ↗</a>
+          <a href="https://app.memoir.systems/login" className="bg-black text-white px-6 py-3 rounded-md text-sm font-medium inline-flex items-center gap-2 transition-all duration-200 hover:bg-[#333] hover:-translate-y-0.5 no-underline">Get started ↗</a>
         </div>
         <AnimatedTerminal />
       </div>
@@ -234,7 +234,7 @@ export default function Home() {
               <li className="flex items-start"><svg className="w-4 h-4 mr-3 mt-0.5 text-black shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Shared Knowledge Graph</li>
               <li className="flex items-start"><svg className="w-4 h-4 mr-3 mt-0.5 text-black shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Standard Email Support</li>
             </ul>
-            <a href="#" className="w-full flex items-center justify-center gap-2 text-sm font-medium text-black bg-white border border-black/10 py-3 rounded-md hover:bg-black hover:text-white transition-colors mt-8 no-underline">Get Started</a>
+            <a href="https://app.memoir.systems/login" className="w-full flex items-center justify-center gap-2 text-sm font-medium text-black bg-white border border-black/10 py-3 rounded-md hover:bg-black hover:text-white transition-colors mt-8 no-underline">Get Started</a>
           </SpotlightCard>
 
           <BorderGlow
@@ -261,7 +261,7 @@ export default function Home() {
                 <li className="flex items-start"><svg className="w-4 h-4 mr-3 mt-0.5 text-[var(--lime)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Custom Roles & Permissions</li>
                 <li className="flex items-start"><svg className="w-4 h-4 mr-3 mt-0.5 text-[var(--lime)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Priority Slack Support</li>
               </ul>
-              <a href="#" className="w-full bg-[var(--lime)] text-black px-6 py-3 rounded-md text-sm font-bold flex items-center justify-center transition-all duration-200 hover:bg-[#a6de45] mt-8 no-underline">Start Free Trial</a>
+              <a href="https://app.memoir.systems/login" className="w-full bg-[var(--lime)] text-black px-6 py-3 rounded-md text-sm font-bold flex items-center justify-center transition-all duration-200 hover:bg-[#a6de45] mt-8 no-underline">Start Free Trial</a>
             </div>
           </BorderGlow>
 

@@ -23,7 +23,10 @@ export default function Navbar() {
         <li><Link to="/docs" className="text-[13.5px] text-black no-underline opacity-70 hover:opacity-100 transition-opacity duration-200">Docs</Link></li>
         <li><Link to="/pricing" className="text-[13.5px] text-black no-underline opacity-70 hover:opacity-100 transition-opacity duration-200">Pricing</Link></li>
       </ul>
-      <a href="#" className="bg-white border-[1.5px] border-black text-black text-[13px] font-medium py-[7px] px-4 rounded-md cursor-pointer flex items-center gap-[6px] no-underline transition-all duration-200 hover:bg-black hover:text-white hover:-translate-y-[1px]">Request a Demo ↗</a>
+      <div className="flex items-center gap-4">
+        <a href="https://app.memoir.systems/login" className="hidden md:block text-[13.5px] text-black no-underline opacity-70 hover:opacity-100 transition-opacity duration-200 font-medium">Log in</a>
+        <a href="https://app.memoir.systems/login" className="bg-white border-[1.5px] border-black text-black text-[13px] font-medium py-[7px] px-4 rounded-md cursor-pointer flex items-center gap-[6px] no-underline transition-all duration-200 hover:bg-black hover:text-white hover:-translate-y-[1px]">Sign up ↗</a>
+      </div>
     </nav>
   );
 }
